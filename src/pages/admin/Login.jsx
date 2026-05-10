@@ -28,7 +28,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-bg-admin flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-bg-admin flex items-center justify-center p-4 relative overflow-hidden dark">
       <div className="absolute inset-0 dot-pattern opacity-50 pointer-events-none"></div>
       
       <div className="w-full max-w-md relative z-10">
