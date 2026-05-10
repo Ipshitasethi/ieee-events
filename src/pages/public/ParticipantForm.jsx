@@ -159,7 +159,7 @@ export default function ParticipantForm() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {fields.map((field) => (
               <div key={field.id} className="space-y-2">
-                <Label className="text-slate-700 font-semibold">{field.label} {field.is_required && <span className="text-red-500">*</span>}</Label>
+                <Label variant="public" className="font-semibold">{field.label} {field.is_required && <span className="text-red-500">*</span>}</Label>
                 {field.field_type === 'textarea' ? (
                   <textarea 
                     className="flex min-h-[100px] w-full rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-accent-blue transition-all"
@@ -195,8 +195,9 @@ export default function ParticipantForm() {
                   </div>
                 ) : (
                   <Input 
+                    variant="public"
                     type={field.label.toLowerCase().includes('email') ? 'email' : 'text'}
-                    className="h-11 border-slate-300 bg-slate-50 text-slate-800 focus:ring-accent-blue"
+                    className="h-11"
                     required={field.is_required}
                     value={formData[field.label] || ''}
                     onChange={e => setFormData({...formData, [field.label]: e.target.value})}
