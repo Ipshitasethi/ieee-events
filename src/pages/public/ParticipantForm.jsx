@@ -120,21 +120,21 @@ export default function ParticipantForm() {
 
   if (!event) {
     return (
-      <Card className="text-center p-12">
+      <div className="bg-white rounded-xl text-center p-12 shadow-lg">
         <Info className="w-12 h-12 text-slate-400 mx-auto mb-4" />
         <h2 className="font-syne text-2xl font-bold text-slate-800 mb-2">Event Not Found</h2>
         <p className="text-slate-500">The event you are looking for does not exist or has been removed.</p>
-      </Card>
+      </div>
     );
   }
 
   if (!event.is_active) {
     return (
-      <Card className="text-center p-12 border-t-4 border-t-red-400 shadow-lg">
+      <div className="bg-white rounded-xl text-center p-12 border-t-4 border-t-red-400 shadow-lg">
         <Info className="w-12 h-12 text-red-400 mx-auto mb-4" />
         <h2 className="font-syne text-2xl font-bold text-slate-800 mb-2">Attendance Closed</h2>
         <p className="text-slate-500">Attendance for <strong>{event.name}</strong> is currently closed.</p>
-      </Card>
+      </div>
     );
   }
 
@@ -154,8 +154,8 @@ export default function ParticipantForm() {
         )}
       </div>
 
-      <Card className="shadow-xl border-t-4 border-t-accent-blue">
-        <CardContent className="p-8">
+      <div className="bg-white rounded-xl shadow-xl border-t-4 border-t-accent-blue overflow-hidden">
+        <div className="p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {fields.map((field) => (
               <div key={field.id} className="space-y-2">
