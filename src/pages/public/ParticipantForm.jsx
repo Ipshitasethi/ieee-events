@@ -211,8 +211,8 @@ export default function ParticipantForm() {
               </Button>
             </div>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
