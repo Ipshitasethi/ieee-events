@@ -154,7 +154,7 @@ export default function ParticipantForm() {
         
       if (existing) {
         toast.success('Attendance already marked! Viewing certificate...');
-        navigate(`/event/${id}/certificate/${existing.id}`);
+        navigate(`/event/${id}/certificate/${existing.id}`, { state: { participant: existing, template } });
         return;
       }
 
@@ -176,7 +176,7 @@ export default function ParticipantForm() {
       toast.success('Attendance marked successfully!');
       
       // Navigate to the success page to show the certificate in real-time
-      navigate(`/event/${id}/certificate/${data.id}`);
+      navigate(`/event/${id}/certificate/${data.id}`, { state: { participant: data, template } });
     } catch (error) {
       toast.error(error.message || 'Failed to mark attendance. Please try again.');
       console.error(error);

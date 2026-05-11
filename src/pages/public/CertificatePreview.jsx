@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -14,10 +14,17 @@ export default function CertificatePreview() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState(null);
   const canvasRef = useRef(null);
+  const location = useLocation();
 
   useEffect(() => {
-    fetchData();
-  }, [id, pid]);
+    if (location.state?.participant && location.state?.template) {
+      setParticipant(location.state.participant);
+      setTemplate(location.state.template);
+      setLoading(false);
+    } else {
+      fetchData();
+    }
+  }, [id, pid, location.state]);
 
   useEffect(() => {
     if (participant && template && canvasRef.current) {
