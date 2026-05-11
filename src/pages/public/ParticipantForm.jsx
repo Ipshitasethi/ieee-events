@@ -178,7 +178,7 @@ export default function ParticipantForm() {
       // Navigate to the success page to show the certificate in real-time
       navigate(`/event/${id}/certificate/${data.id}`);
     } catch (error) {
-      toast.error('Failed to mark attendance. Please try again.');
+      toast.error(error.message || 'Failed to mark attendance. Please try again.');
       console.error(error);
     } finally {
       setSubmitting(false);
