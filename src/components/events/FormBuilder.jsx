@@ -108,10 +108,14 @@ export default function FormBuilder({ eventId }) {
 
         const { isNew, tempId, _optionsText, ...rest } = f;
         const isRealUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(f.id);
+        
         if (!isRealUuid) {
-          const { id, ...newRest } = rest;
-          return newRest;
+          // For new fields, generate a real UUID before upserting
+          // This ensures all objects in the bulk operation have an 'id' key,
+          // preventing PostgREST from sending NULL for missing keys.
+          return { ...rest, id: crypto.randomUUID() };
         }
+        
         return rest;
       });
 
