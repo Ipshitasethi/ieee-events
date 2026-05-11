@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input, Label } from '../ui/Input';
-import { Search, Download, UserPlus, FileSpreadsheet, FileText, Trash2 } from 'lucide-react';
+import { Search, Download, UserPlus, FileSpreadsheet, FileText, Trash2, Eye, X, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 import Papa from 'papaparse';
@@ -23,6 +23,7 @@ export default function AttendanceTab({ eventId }) {
   const [adding, setAdding] = useState(false);
   const [realtimeActive, setRealtimeActive] = useState(false);
   const [newlyAdded, setNewlyAdded] = useState([]); // Array of IDs to highlight
+  const [previewFile, setPreviewFile] = useState(null); // { url, type, label }
 
   useEffect(() => {
     fetchData();
@@ -296,7 +297,24 @@ export default function AttendanceTab({ eventId }) {
                       <td className="px-6 py-4 text-slate-400">{p.email}</td>
                     {formFields.filter(f => f.label !== 'Full Name' && f.label !== 'Email Address').map(f => (
                       <td key={f.id} className="px-6 py-4 text-slate-400">
-                        {p.form_data?.[f.label] || '-'}
+                        {f.field_type === 'file' && p.form_data?.[f.label] ? (
+                          <button
+                            onClick={() => {
+                              const url = p.form_data[f.label];
+                              const isPdf = url.toLowerCase().endsWith('.pdf') || url.includes('.pdf?');
+                              setPreviewFile({
+                                url,
+                                type: isPdf ? 'pdf' : 'image',
+                                label: f.label
+                              });
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 text-accent-cyan rounded-md border border-slate-700 hover:bg-slate-700 transition-colors text-xs font-medium"
+                          >
+                            <Eye className="w-3.5 h-3.5" /> View
+                          </button>
+                        ) : (
+                          p.form_data?.[f.label] || '-'
+                        )}
                       </td>
                     ))}
                     <td className="px-6 py-4 text-slate-400 font-mono text-xs">
@@ -392,6 +410,71 @@ export default function AttendanceTab({ eventId }) {
               </Button>
             </div>
           </Card>
+        </div>
+      )}
+
+      {/* File Preview Modal */}
+      {previewFile && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[60] animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-4 border-b flex justify-between items-center bg-slate-50">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-accent-cyan/10 rounded-lg">
+                  {previewFile.type === 'image' ? <Eye className="w-5 h-5 text-accent-cyan" /> : <FileText className="w-5 h-5 text-accent-cyan" />}
+                </div>
+                <h3 className="font-syne font-bold text-slate-800">{previewFile.label}</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <a 
+                  href={previewFile.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="p-2 text-slate-500 hover:text-slate-800 transition-colors"
+                  title="Open in new tab"
+                >
+                  <ExternalLink className="w-5 h-5" />
+                </a>
+                <button 
+                  onClick={() => setPreviewFile(null)}
+                  className="p-2 text-slate-400 hover:text-slate-800 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-auto p-6 bg-slate-200/50 flex items-center justify-center min-h-[300px]">
+              {previewFile.type === 'image' ? (
+                <img 
+                  src={previewFile.url} 
+                  alt="Preview" 
+                  className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                />
+              ) : (
+                <iframe 
+                  src={previewFile.url} 
+                  className="w-full h-[60vh] rounded-lg border border-slate-300 shadow-sm"
+                  title="PDF Preview"
+                />
+              )}
+            </div>
+            
+            <div className="p-4 border-t bg-slate-50 flex justify-end">
+              <Button 
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = previewFile.url;
+                  link.download = `upload-${previewFile.label}`;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+                className="bg-accent-cyan text-slate-950 hover:bg-cyan-400"
+              >
+                <Download className="w-4 h-4 mr-2" /> Download File
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>

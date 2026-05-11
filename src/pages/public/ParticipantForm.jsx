@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { Card, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input, Label } from '../../components/ui/Input';
-import { Calendar, Info } from 'lucide-react';
+import { Calendar, Info, Upload, FileText, X, FileCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getCertificateBase64 } from '../../services/certificateGenerator';
 
@@ -17,6 +17,7 @@ export default function ParticipantForm() {
   const [template, setTemplate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [fileData, setFileData] = useState({}); // Stores { label: { file, preview, name } }
 
   useEffect(() => {
     fetchEventData();
@@ -48,6 +49,50 @@ export default function ParticipantForm() {
     }
   };
 
+  const handleFileChange = (field, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // 5MB Validation
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File size must be less than 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFileData(prev => ({
+        ...prev,
+        [field.label]: {
+          file,
+          preview: file.type.startsWith('image/') ? reader.result : null,
+          name: file.name
+        }
+      }));
+    };
+    
+    if (file.type.startsWith('image/')) {
+      reader.readAsDataURL(file);
+    } else {
+      setFileData(prev => ({
+        ...prev,
+        [field.label]: {
+          file,
+          preview: null,
+          name: file.name
+        }
+      }));
+    }
+  };
+
+  const removeFile = (label) => {
+    setFileData(prev => {
+      const newData = { ...prev };
+      delete newData[label];
+      return newData;
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -66,12 +111,37 @@ export default function ParticipantForm() {
         return;
       }
 
+      // Generate a temporary ID for participant to use in file path
+      const participantId = crypto.randomUUID();
+
       // Clean form data (trim keys and values)
       const cleanData = {};
       Object.keys(formData).forEach(k => {
         const val = formData[k];
         cleanData[k.trim()] = typeof val === 'string' ? val.trim() : val;
       });
+
+      // Handle File Uploads
+      const fileLabels = Object.keys(fileData);
+      for (const label of fileLabels) {
+        const { file } = fileData[label];
+        const field = fields.find(f => f.label === label);
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `${id}/${participantId}/${field.id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('participant-uploads')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('participant-uploads')
+          .getPublicUrl(filePath);
+
+        cleanData[label] = publicUrl;
+      }
 
       // Check if already registered (match both name AND email)
       const { data: existing } = await supabase
@@ -92,6 +162,7 @@ export default function ParticipantForm() {
       const { data, error } = await supabase
         .from('participants')
         .insert([{
+          id: participantId,
           event_id: id,
           name: name.trim(),
           email: email.trim(),
@@ -192,6 +263,60 @@ export default function ParticipantForm() {
                         {opt}
                       </label>
                     ))}
+                  </div>
+                ) : field.field_type === 'file' ? (
+                  <div className="space-y-3">
+                    {!fileData[field.label] ? (
+                      <div 
+                        onClick={() => document.getElementById(`file-${field.id}`).click()}
+                        className="group relative border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:border-accent-blue hover:bg-blue-50/50 transition-all cursor-pointer"
+                      >
+                        <input 
+                          id={`file-${field.id}`}
+                          type="file" 
+                          className="hidden"
+                          accept={field.options?.accept?.map(t => t === 'image' ? 'image/jpeg,image/png' : 'application/pdf').join(',')}
+                          onChange={(e) => handleFileChange(field, e)}
+                          required={field.is_required && !fileData[field.label]}
+                        />
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                            <Upload className="w-6 h-6 text-slate-400 group-hover:text-accent-blue" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-slate-700">Click to upload or drag and drop</p>
+                            <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider font-bold">
+                              {field.options?.accept?.map(t => t === 'image' ? 'JPG, PNG' : 'PDF').join(' or ') || 'Any File'} — MAX 5MB
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200 group animate-in fade-in slide-in-from-bottom-2">
+                        {fileData[field.label].preview ? (
+                          <div className="w-16 h-16 rounded-lg overflow-hidden border border-slate-200 shadow-sm flex-shrink-0">
+                            <img src={fileData[field.label].preview} alt="Preview" className="w-full h-full object-cover" />
+                          </div>
+                        ) : (
+                          <div className="w-16 h-16 rounded-lg bg-red-50 flex items-center justify-center border border-red-100 flex-shrink-0">
+                            <FileText className="w-8 h-8 text-red-400" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-slate-800 truncate">{fileData[field.label].name}</p>
+                          <p className="text-xs text-green-600 flex items-center gap-1 font-medium mt-0.5">
+                            <FileCheck className="w-3 h-3" /> Ready to upload
+                          </p>
+                        </div>
+                        <button 
+                          type="button"
+                          onClick={() => removeFile(field.label)}
+                          className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <Input 

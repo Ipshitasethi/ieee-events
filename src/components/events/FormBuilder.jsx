@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { Card, CardContent } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input, Label } from '../ui/Input';
-import { Plus, Trash2, GripVertical, Save } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Save, FileUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function FormBuilder({ eventId }) {
@@ -185,6 +185,7 @@ export default function FormBuilder({ eventId }) {
                         <option value="textarea">Long Text</option>
                         <option value="dropdown">Dropdown</option>
                         <option value="radio">Multiple Choice</option>
+                        <option value="file">File Upload</option>
                       </select>
                     </div>
                       <div className="pt-8 flex items-center gap-6">
@@ -235,6 +236,37 @@ export default function FormBuilder({ eventId }) {
                           }));
                         }}
                       />
+                    </div>
+                  )}
+
+                  {field.field_type === 'file' && (
+                    <div className="mt-4 pt-4 border-t border-slate-800 space-y-3">
+                      <Label>Accepted file types</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {['image', 'pdf'].map(type => {
+                          const isSelected = Array.isArray(field.options?.accept) && field.options.accept.includes(type);
+                          return (
+                            <button
+                              key={type}
+                              type="button"
+                              onClick={() => {
+                                const currentAccept = Array.isArray(field.options?.accept) ? field.options.accept : [];
+                                const newAccept = isSelected 
+                                  ? currentAccept.filter(t => t !== type)
+                                  : [...currentAccept, type];
+                                updateField(field.id, 'options', { ...field.options, accept: newAccept });
+                              }}
+                              className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                                isSelected 
+                                  ? 'bg-accent-cyan text-slate-950 shadow-[0_0_15px_rgba(34,211,238,0.3)]' 
+                                  : 'bg-slate-800 text-slate-400 border border-slate-700 hover:border-slate-500'
+                              }`}
+                            >
+                              {type === 'image' ? 'Images (JPG, PNG)' : 'PDF Document'}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
                 </CardContent>
