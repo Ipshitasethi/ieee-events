@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input, Label } from '../../components/ui/Input';
-import { Plus, Calendar as CalendarIcon, Users } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, Users, Trash2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
@@ -13,6 +13,8 @@ export default function EventsList() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newEvent, setNewEvent] = useState({ name: '', description: '', date: '' });
   const [creating, setCreating] = useState(false);
+  const [deletingEvent, setDeletingEvent] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -74,6 +76,28 @@ export default function EventsList() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!deletingEvent) return;
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', deletingEvent.id);
+
+      if (error) throw error;
+      
+      toast.success('Event deleted');
+      setEvents(events.filter(e => e.id !== deletingEvent.id));
+      setDeletingEvent(null);
+    } catch (error) {
+      toast.error('Failed to delete event');
+      console.error(error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -105,6 +129,16 @@ export default function EventsList() {
                     ) : (
                       <span className="w-2.5 h-2.5 rounded-full bg-slate-600"></span>
                     )}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setDeletingEvent(event);
+                      }}
+                      className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-md transition-all opacity-0 group-hover:opacity-100"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-4">
@@ -173,6 +207,38 @@ export default function EventsList() {
                   </Button>
                 </div>
               </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+      {/* Delete Confirmation Modal */}
+      {deletingEvent && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+          <Card glow className="w-full max-w-md shadow-2xl border-red-900/50">
+            <CardHeader>
+              <CardTitle className="text-red-400">Delete Event</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-slate-300">
+                Are you sure you want to delete <span className="font-bold text-white">"{deletingEvent.name}"</span>? 
+                This action cannot be undone and will remove all participant data.
+              </p>
+              <div className="pt-4 flex justify-end gap-3">
+                <button 
+                  disabled={isDeleting}
+                  onClick={() => setDeletingEvent(null)}
+                  className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <Button 
+                  variant="danger" 
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete Event'}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>

@@ -77,17 +77,15 @@ export const drawCertificateOnCanvas = (canvas, template, participantData) => {
 
 export const downloadAsPDF = (canvas, filename) => {
   try {
-    // Use JPEG instead of PNG for significantly faster encoding on large canvases
-    const imgData = canvas.toDataURL('image/jpeg', 0.9);
-    
-    // Default to landscape A4 based on canvas dimensions
+    const imgData = canvas.toDataURL('image/png');
+    // Default to landscape A4
     const pdf = new jsPDF({
-      orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+      orientation: 'landscape',
       unit: 'px',
       format: [canvas.width, canvas.height]
     });
     
-    pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
+    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
     pdf.save(filename);
   } catch (error) {
     console.error(error);
