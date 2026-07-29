@@ -8,6 +8,7 @@ import { Zap, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function RequestAccess() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,6 +22,11 @@ export default function RequestAccess() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          full_name: name
+        }
+      }
     });
     
     if (error) {
@@ -78,6 +84,17 @@ export default function RequestAccess() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleRequest} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="John Doe"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email address</Label>
                 <Input

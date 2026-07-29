@@ -25,10 +25,8 @@ serve(async (req) => {
       .setExpirationTime("48h")
       .sign(secret);
 
-    // Build the approval link (adjust the domain to your actual Edge Function URL)
-    const functionUrl = req.url;
-    const baseUrl = functionUrl.substring(0, functionUrl.lastIndexOf('/'));
-    const approveLink = `${baseUrl}/approve-access?token=${token}`;
+    // Build the approval link using the known project URL
+    const approveLink = `https://kvebuwivvbfzxrnyirbp.supabase.co/functions/v1/approve-access?token=${token}`;
 
     if (!RESEND_API_KEY || !OWNER_EMAIL) {
       console.log("Missing RESEND_API_KEY or OWNER_EMAIL. Fallback: log link.");

@@ -83,8 +83,8 @@ export default function TeamManagement() {
 
   const removeMember = async (id) => {
     try {
-      // In a real app, this should delete the user from auth.users or revoke access
-      const { error } = await supabase.from('profiles').delete().eq('id', id);
+      // Delete user entirely using the custom database function we added
+      const { error } = await supabase.rpc('delete_user_completely', { user_id: id });
       if (error) throw error;
       toast.success('Member removed');
       setMembers(members.filter(m => m.id !== id));
@@ -126,10 +126,15 @@ export default function TeamManagement() {
                   <tr key={member.id} className="hover:bg-slate-800/20 transition-colors">
                     <td className="px-6 py-4">
                       <div className="font-medium text-slate-200 flex items-center gap-2">
-                        {member.id === currentUserId && <span className="w-2 h-2 rounded-full bg-accent-cyan"></span>}
-                        {member.email || member.id}
+                        {member.id === currentUserId && <span className="w-2 h-2 rounded-full bg-accent-cyan" title="You"></span>}
+                        {member.full_name || member.email || 'Unnamed User'}
+                        {member.status === 'pending' && (
+                          <span className="ml-2 px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-yellow-500/20 text-yellow-500 border border-yellow-500/30">
+                            Pending
+                          </span>
+                        )}
                       </div>
-                      <div className="text-xs text-slate-500 mt-1">{member.id}</div>
+                      <div className="text-xs text-slate-500 mt-1">{member.email || member.id}</div>
                     </td>
                     <td className="px-6 py-4">
                       {currentUserRole === 'owner' && member.id !== currentUserId ? (
