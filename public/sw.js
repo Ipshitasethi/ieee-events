@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ieee-attend-v3';
+const CACHE_NAME = 'ieee-attend-v4';
 
 // Add list of files to cache here
 const urlsToCache = [
