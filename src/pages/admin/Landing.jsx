@@ -1,10 +1,21 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { supabase } from '../../lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Zap, Shield, UserPlus } from 'lucide-react';
 
 export default function Landing() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        navigate('/admin');
+      }
+    });
+  }, [navigate]);
+
   return (
     <div className="min-h-screen bg-bg-admin flex items-center justify-center p-4 relative overflow-hidden dark">
       <div className="absolute inset-0 dot-pattern opacity-50 pointer-events-none"></div>

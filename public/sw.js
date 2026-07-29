@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ieee-attend-v2';
+const CACHE_NAME = 'ieee-attend-v3';
 
 // Add list of files to cache here
 const urlsToCache = [
@@ -18,38 +18,28 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Exclude Supabase API and other cross-origin requests from being intercepted
+  // by the cache at all, to guarantee live database data is always fresh.
+  if (!event.request.url.startsWith(self.location.origin)) {
+    return;
+  }
+
+  // Network-First strategy for our app code
   event.respondWith(
-    caches.match(event.request)
+    fetch(event.request)
       .then((response) => {
-        // Cache hit - return response
-        if (response) {
-          return response;
+        // If network succeeds, save a copy in the cache and return it
+        if (response && response.status === 200 && response.type === 'basic') {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
         }
-
-        return fetch(event.request).then(
-          (response) => {
-            // Check if we received a valid response
-            if(!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-
-            // IMPORTANT: Clone the response. A response is a stream
-            // and because we want the browser to consume the response
-            // as well as the cache consuming the response, we need
-            // to clone it so we have two streams.
-            var responseToCache = response.clone();
-
-            caches.open(CACHE_NAME)
-              .then((cache) => {
-                // We don't cache API requests or non-GET requests
-                if (event.request.method === 'GET' && !event.request.url.includes('/supabase/')) {
-                   cache.put(event.request, responseToCache);
-                }
-              });
-
-            return response;
-          }
-        );
+        return response;
+      })
+      .catch(() => {
+        // If network fails (offline), fallback to cache
+        return caches.match(event.request);
       })
   );
 });

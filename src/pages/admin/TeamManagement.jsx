@@ -93,6 +93,21 @@ export default function TeamManagement() {
     }
   };
 
+  const approveMember = async (id) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ status: 'admin' })
+        .eq('id', id);
+        
+      if (error) throw error;
+      toast.success('Member approved');
+      setMembers(members.map(m => m.id === id ? { ...m, status: 'admin' } : m));
+    } catch (error) {
+      toast.error('Failed to approve member');
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-5xl">
       <div className="flex justify-between items-center">
@@ -160,13 +175,24 @@ export default function TeamManagement() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       {currentUserRole === 'owner' && member.id !== currentUserId && (
-                        <button 
-                          onClick={() => removeMember(member.id)}
-                          className="text-red-400 hover:text-red-300 transition-colors p-2"
-                          title="Remove Member"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex justify-end gap-1">
+                          {member.status === 'pending' && (
+                            <button 
+                              onClick={() => approveMember(member.id)}
+                              className="text-green-400 hover:text-green-300 hover:bg-green-400/10 rounded transition-colors p-2"
+                              title="Approve Access"
+                            >
+                              <Shield className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button 
+                            onClick={() => removeMember(member.id)}
+                            className="text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded transition-colors p-2"
+                            title="Remove Member"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>

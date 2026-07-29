@@ -1,25 +1,65 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Input, Label } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
-import { Zap, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { Zap, ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function RequestAccess() {
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setCurrentUserId(session.user.id);
+        const { data: profile } = await supabase.from('profiles').select('status').eq('id', session.user.id).single();
+        if (profile?.status === 'admin') {
+          navigate('/admin');
+        } else if (profile?.status === 'pending') {
+          setSuccess(true);
+        }
+      }
+    };
+    checkSession();
+  }, [navigate]);
+
+  useEffect(() => {
+    if (!success || !currentUserId) return;
+
+    const channel = supabase
+      .channel('public:profiles')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${currentUserId}` },
+        (payload) => {
+          if (payload.new.status === 'admin') {
+            toast.success('Your access was approved!');
+            navigate('/admin');
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [success, currentUserId, navigate]);
 
   const handleRequest = async (e) => {
     e.preventDefault();
     setLoading(true);
     
     // Call Supabase signUp. The DB trigger will handle creating the profile and sending the email.
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -33,6 +73,7 @@ export default function RequestAccess() {
       toast.error(error.message);
       setLoading(false);
     } else {
+      setCurrentUserId(data?.user?.id);
       setSuccess(true);
       setLoading(false);
     }
@@ -49,6 +90,10 @@ export default function RequestAccess() {
             <p className="text-slate-400 mb-6">
               Your request for access has been submitted. You will receive an email once the workspace owner approves your account.
             </p>
+            <div className="flex items-center text-accent-cyan text-sm mb-6 animate-pulse">
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Waiting for real-time approval...
+            </div>
             <Link to="/">
               <Button>Return to Home</Button>
             </Link>
