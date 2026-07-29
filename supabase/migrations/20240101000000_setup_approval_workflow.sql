@@ -9,7 +9,7 @@ SECURITY DEFINER SET search_path = public
 AS $$
 BEGIN
   INSERT INTO public.profiles (id, email, role, status)
-  VALUES (new.id, new.email, 'admin', 'pending');
+  VALUES (new.id, new.email, 'full', 'pending');
   RETURN new;
 END;
 $$;
