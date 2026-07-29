@@ -1,31 +1,56 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Input, Label } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
-import { Zap, ArrowLeft } from 'lucide-react';
+import { Zap, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-export default function Login() {
+export default function RequestAccess() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [success, setSuccess] = useState(false);
 
-  const handleLogin = async (e) => {
+  const handleRequest = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    
+    // Call Supabase signUp. The DB trigger will handle creating the profile and sending the email.
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
     
     if (error) {
       toast.error(error.message);
       setLoading(false);
     } else {
-      toast.success('Welcome back!');
-      navigate('/admin');
+      setSuccess(true);
+      setLoading(false);
     }
   };
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-bg-admin flex items-center justify-center p-4 relative overflow-hidden dark">
+        <div className="absolute inset-0 dot-pattern opacity-50 pointer-events-none"></div>
+        <Card glow className="w-full max-w-md relative z-10 text-center">
+          <CardContent className="pt-8 pb-8 flex flex-col items-center">
+            <CheckCircle2 className="w-16 h-16 text-green-400 mb-4" />
+            <h2 className="font-syne text-2xl font-bold text-white mb-2">Request Sent!</h2>
+            <p className="text-slate-400 mb-6">
+              Your request for access has been submitted. You will receive an email once the workspace owner approves your account.
+            </p>
+            <Link to="/">
+              <Button>Return to Home</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-bg-admin flex items-center justify-center p-4 relative overflow-hidden dark">
@@ -43,39 +68,41 @@ export default function Login() {
           <div className="w-12 h-12 rounded bg-accent-blue/20 flex items-center justify-center glow-border mb-4">
             <Zap className="w-7 h-7 text-accent-cyan" />
           </div>
-          <h1 className="font-syne font-bold text-3xl text-white tracking-tight">IEEE Attend</h1>
-          <p className="text-slate-400 mt-2">Admin Portal Login</p>
+          <h1 className="font-syne font-bold text-3xl text-white tracking-tight">Request Access</h1>
+          <p className="text-slate-400 mt-2">Create an account to manage events</p>
         </div>
 
         <Card glow className="w-full">
           <CardHeader>
-            <CardTitle>Sign In</CardTitle>
+            <CardTitle>Sign Up</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleRequest} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email address</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@ieee.org"
+                  placeholder="your@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Password (to use later)</Label>
                 <Input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  minLength={6}
                 />
+                <p className="text-xs text-slate-500">Minimum 6 characters</p>
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Signing in...' : 'Sign In'}
+                {loading ? 'Submitting...' : 'Request Access'}
               </Button>
             </form>
           </CardContent>

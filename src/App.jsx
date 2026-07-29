@@ -3,7 +3,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import AdminLayout from './layouts/AdminLayout'
 import PublicLayout from './layouts/PublicLayout'
+import Landing from './pages/admin/Landing'
 import Login from './pages/admin/Login'
+import RequestAccess from './pages/admin/RequestAccess'
 import Dashboard from './pages/admin/Dashboard'
 import EventsList from './pages/admin/EventsList'
 import EventDetail from './pages/admin/EventDetail'
@@ -17,8 +19,9 @@ export default function App() {
     <BrowserRouter>
       <div className="min-h-screen w-full">
         <Routes>
-          <Route path="/" element={<Navigate to="/admin" replace />} />
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/request-access" element={<RequestAccess />} />
           
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />

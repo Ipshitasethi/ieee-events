@@ -47,3 +47,88 @@
   background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
   background-size: 20px 20px;
 }
+
+/* Mobile Responsiveness Overrides */
+@media (max-width: 768px) {
+  /* Admin Sidebar Override */
+  .h-screen.flex > aside.w-64 {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100% !important;
+    height: auto !important;
+    max-height: 80px;
+    flex-direction: row !important;
+    z-index: 50;
+    border-right: none !important;
+    border-top: 1px solid var(--color-border-glow);
+    padding: 0 !important;
+    background: var(--color-surface-admin);
+  }
+  
+  /* Hide sidebar header and footer on mobile */
+  .h-screen.flex > aside.w-64 > div:first-child,
+  .h-screen.flex > aside.w-64 > div:last-child {
+    display: none !important;
+  }
+  
+  /* Make nav horizontal */
+  .h-screen.flex > aside.w-64 nav {
+    flex-direction: row !important;
+    justify-content: space-around;
+    align-items: center;
+    padding: 8px !important;
+    width: 100%;
+    overflow: hidden;
+  }
+  
+  .h-screen.flex > aside.w-64 nav a {
+    flex-direction: column !important;
+    padding: 6px !important;
+    gap: 4px !important;
+    border-left: none !important;
+    border-bottom: 2px solid transparent !important;
+    flex: 1;
+    justify-content: center;
+  }
+  
+  .h-screen.flex > aside.w-64 nav a.border-l-2 {
+    border-bottom-color: var(--color-accent-cyan) !important;
+    background: transparent !important;
+  }
+  
+  .h-screen.flex > aside.w-64 nav a span {
+    font-size: 11px !important;
+    line-height: 1;
+  }
+
+  /* Main content padding adjustment */
+  .h-screen.flex > main {
+    padding-bottom: 80px !important;
+  }
+  
+  .h-screen.flex > main > div.p-8 {
+    padding: 16px !important;
+  }
+  
+  /* Tabs overflow */
+  nav.space-x-8 {
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
+  }
+  nav.space-x-8::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Table wrappers */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Fix min-width wrappers */
+  .min-w-\[300px\], .min-w-\[200px\] {
+    min-width: 100% !important;
+  }
+}
